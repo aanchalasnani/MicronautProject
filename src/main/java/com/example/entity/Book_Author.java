@@ -1,17 +1,16 @@
 package com.example.entity;
 
-import io.micronaut.serde.annotation.Serdeable;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import java.io.Serializable;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@EqualsAndHashCode(callSuper = false)
 @IdClass(EmbeddedBookAuthor.class)
 @Table(name = "book_author", indexes = {
         @Index(name = "book_id_index", columnList = "book_id"),

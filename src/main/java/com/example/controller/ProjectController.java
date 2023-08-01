@@ -20,8 +20,14 @@ import java.util.List;
 @Slf4j
 public class ProjectController {
 
+    private ProjectService service;
+//    @Inject
+//    ProjectService service;
+
     @Inject
-    ProjectService service;
+    ProjectController(ProjectService service) {
+        this.service = service;
+    }
 
     @Get("/")
     public String getHello() {

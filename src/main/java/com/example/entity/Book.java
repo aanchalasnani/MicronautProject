@@ -4,6 +4,7 @@ import io.micronaut.serde.annotation.Serdeable;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Data
@@ -11,6 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Entity
 @Serdeable
+@EqualsAndHashCode(callSuper = false)
 @Table(name = "book", indexes = {
         @Index(name = "book_id_index", columnList = "id")
 }, uniqueConstraints = @UniqueConstraint(columnNames = {"isbn"}))

@@ -19,14 +19,17 @@ import java.util.Optional;
 @Singleton
 public class ProjectService {
 
-    @Inject
     AuthorRepository authorRepository;
-
-    @Inject
     BookRepository bookRepository;
+    BookAuthorRepository bookAuthorRepository;
 
     @Inject
-    BookAuthorRepository bookAuthorRepository;
+    public ProjectService(AuthorRepository authorRepository, BookRepository bookRepository, BookAuthorRepository bookAuthorRepository) {
+        this.authorRepository = authorRepository;
+        this.bookRepository = bookRepository;
+        this.bookAuthorRepository = bookAuthorRepository;
+    }
+
 
     public List<Author> getAllAuthors() {
         return authorRepository.findAll();
@@ -38,12 +41,12 @@ public class ProjectService {
 
     @RequiresValidation
     public Book addBook(Book book) throws BadRequestException {
-        Optional<Book> QueryBook =bookRepository.checkDuplicateBookName(book.getName());
-        if(QueryBook.isPresent()){
+        Optional<Book> queryBook =bookRepository.checkDuplicateBookName(book.getName());
+        if(queryBook.isPresent()){
             throw new BadRequestException("Bad Request Exception", "Book with name " + book.getName() + " already exists");
         }
-        Optional<Book> DuplicateIsbnBookQuery = bookRepository.findByIsbn(book.getIsbn());
-        if(DuplicateIsbnBookQuery.isPresent()){
+        Optional<Book> duplicateIsbnBookQuery = bookRepository.findByIsbn(book.getIsbn());
+        if(duplicateIsbnBookQuery.isPresent()){
             throw new BadRequestException("Bad Request Exception", "Book with isbn " + book.getIsbn() + " already exists");
         }
         return bookRepository.save(book);
@@ -71,8 +74,8 @@ public class ProjectService {
         if(authorRepository.findById(authorId).isEmpty()){
             throw new NotFoundException("Not Found Exception", "Author with authorId : " + authorId + " does not exist.");
         }
-        List<Book_Author> BookAuthorList = bookAuthorRepository.findAll();
-        for(Book_Author bookAuthor : BookAuthorList) {
+        List<Book_Author> bookAuthorList = bookAuthorRepository.findAll();
+        for(Book_Author bookAuthor : bookAuthorList) {
             if(bookAuthor.getAuthor().getId() == authorId) {
                 Book authorBook = bookRepository.findById(bookAuthor.getBook().getId()).orElse(null);
                 bookList.add(authorBook);
