@@ -2,7 +2,9 @@ package com.example.service;
 
 import com.example.entity.Author;
 import com.example.entity.Book;
+import com.example.entity.Book_Author;
 import com.example.exception.BadRequestException;
+import com.example.exception.NotFoundException;
 import com.example.repository.AuthorRepository;
 import com.example.repository.BookAuthorRepository;
 import com.example.repository.BookRepository;
@@ -40,7 +42,7 @@ public class ProjectServiceTest {
 
 
     @Test
-    public void testGetAllAuthors() {
+    public void getAllAuthorsTest() {
         // Arrange
         List<Author> expectedAuthors = new ArrayList<>();
         expectedAuthors.add(new Author(1, "John Doe", "john.doe@example.com"));
@@ -56,7 +58,7 @@ public class ProjectServiceTest {
     }
 
     @Test
-    public void testGetAllBooks() {
+    public void getAllBooksTest() {
         //arrange
         List<Book> expectedBooks = new ArrayList<>() ;
         expectedBooks.add(new Book(1, "Object oriented programming", 380, 178654));
@@ -71,7 +73,7 @@ public class ProjectServiceTest {
     }
 
     @Test
-    public void testAddBook() throws BadRequestException {
+    public void addBookTest() throws BadRequestException {
 
         //scenario:1 => adding valid book
         Book expectedBook = new Book(1, "Object oriented programming", 850, 189761);
@@ -90,15 +92,59 @@ public class ProjectServiceTest {
         Exception badRequestExceptionSameIsbn = assertThrows(BadRequestException.class, ()->service.addBook(expectedBookWithSameIsbn));
     }
 
-//    @Test
-//    public void testAddBookException() throws BadRequestException {
-//        Book expectedBook = new Book(1, "Object oriented programming", 850, 189761);
-//        when(bookRepository.save(expectedBook)).thenReturn(expectedBook);
-//        Book actualBook = service.addBook(expectedBook);
-//        assertEquals(expectedBook, actualBook);
-//        //scenario:3 => book with same isbn
-//        Book expectedBookWithSameIsbn = new Book(3, "Programmin in C++", 390, 189761);
-//        when(bookRepository.findByIsbn(expectedBookWithSameIsbn.getIsbn())).thenReturn(Optional.of(expectedBook));
-//        Exception badRequestExceptionSameIsbn = assertThrows(BadRequestException.class, ()->service.addBook(expedtedBookWithSameName));
-//    }
+    @Test
+    public void addAuthorTest() throws BadRequestException
+    {
+        //scenario:1 => adding a valid author
+        Author expectedAuthor = new Author(1, "Anshika", "anshika@gmail.com");
+        when(authorRepository.save(expectedAuthor)).thenReturn(expectedAuthor);
+        Author actualAuthor = service.addAuthor(expectedAuthor);
+        assertEquals(expectedAuthor, actualAuthor);
+
+        //scenario:2 => adding duplicate email id
+        Author expectedAuthorWithDuplicateEmail = new Author(2, "Anshi", "anshika@gmail.com");
+        when(authorRepository.findByEmailId(expectedAuthorWithDuplicateEmail.getEmailId())).thenReturn(Optional.of(expectedAuthor));
+        Exception badRequestException = assertThrows(BadRequestException.class, ()->service.addAuthor(expectedAuthorWithDuplicateEmail));
+    }
+
+    @Test
+    public void getAuthorByIdTest() throws NotFoundException {
+        // scenario:1 => getting valid author
+        Author author = new Author(1, "Aanchal", "aanchal@gmail.com");
+        when(authorRepository.findById(author.getId())).thenReturn(Optional.of(author));
+
+        Author actualAuthor = service.getAuthorById(author.getId());
+        assertEquals(author, actualAuthor);
+
+        //scenario:2 => author with authorId not found
+        Exception notFound = assertThrows(NotFoundException.class, ()->service.getAuthorById(2));
+    }
+
+    @Test
+    public void getBookByAuthorIdTest() throws NotFoundException {
+        //scenario:1
+        Author expectedAuthor = new Author(1, "Aanchal", "aanchal@gmail.com");
+        Book expectedBook = new Book(1, "Object oriented programming", 850, 189761);
+        List<Book> expectedBookList = new ArrayList<>();
+        expectedBookList.add(expectedBook);
+
+        List<Book_Author> expectedBookAuthor = new ArrayList<>();
+        expectedBookAuthor.add(new Book_Author(expectedBook, expectedAuthor));
+
+        when(authorRepository.findById(expectedAuthor.getId())).thenReturn(Optional.of(expectedAuthor));
+
+        when(bookAuthorRepository.findAll()).thenReturn(expectedBookAuthor);
+
+        when(bookRepository.findById(expectedBook.getId())).thenReturn(Optional.of(expectedBook));
+
+        List<Book> actualBooksById = service.getBookByAuthorId(expectedAuthor.getId());
+
+        assertEquals(expectedBookList, actualBooksById);
+
+        //scenario 2 : => Not found
+        NotFoundException notFound = assertThrows(NotFoundException.class, ()->service.getBookByAuthorId(2));
+
+
+    }
+
 }

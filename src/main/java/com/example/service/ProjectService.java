@@ -5,10 +5,10 @@ import com.example.entity.Book;
 import com.example.entity.Book_Author;
 import com.example.exception.BadRequestException;
 import com.example.exception.NotFoundException;
+import com.example.model.dto.BookDTO;
 import com.example.repository.AuthorRepository;
 import com.example.repository.BookAuthorRepository;
 import com.example.repository.BookRepository;
-import io.micronaut.inject.validation.RequiresValidation;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
@@ -19,9 +19,9 @@ import java.util.Optional;
 @Singleton
 public class ProjectService {
 
-    AuthorRepository authorRepository;
-    BookRepository bookRepository;
-    BookAuthorRepository bookAuthorRepository;
+    private final AuthorRepository authorRepository;
+    private final BookRepository bookRepository;
+    private final BookAuthorRepository bookAuthorRepository;
 
     @Inject
     public ProjectService(AuthorRepository authorRepository, BookRepository bookRepository, BookAuthorRepository bookAuthorRepository) {
@@ -39,20 +39,21 @@ public class ProjectService {
         return bookRepository.findAll();
     }
 
-    @RequiresValidation
-    public Book addBook(Book book) throws BadRequestException {
-        Optional<Book> queryBook =bookRepository.checkDuplicateBookName(book.getName());
+    public Book addBook(BookDTO bookDTO) throws BadRequestException {
+        Optional<Book> queryBook =bookRepository.checkDuplicateBookName(bookDTO.getName());
+
         if(queryBook.isPresent()){
-            throw new BadRequestException("Bad Request Exception", "Book with name " + book.getName() + " already exists");
+            throw new BadRequestException("Bad Request Exception", "Book with name " + bookDTO.getName() + " already exists");
         }
-        Optional<Book> duplicateIsbnBookQuery = bookRepository.findByIsbn(book.getIsbn());
-        if(duplicateIsbnBookQuery.isPresent()){
-            throw new BadRequestException("Bad Request Exception", "Book with isbn " + book.getIsbn() + " already exists");
-        }
+
+        Book book = new Book();
+        book.setName(bookDTO.getName());
+        book.setIsbn(bookDTO.getIsbn());
+        book.setPrice(bookDTO.getPrice());
+
         return bookRepository.save(book);
     }
 
-    @RequiresValidation
     public Author addAuthor(Author author) throws BadRequestException {
         Optional<Author> existingAuthor = authorRepository.findByEmailId(author.getEmailId());
         if (existingAuthor.isPresent()) {

@@ -4,13 +4,14 @@ import com.example.entity.Author;
 import com.example.entity.Book;
 import com.example.exception.BadRequestException;
 import com.example.exception.NotFoundException;
+import com.example.model.dto.BookDTO;
+import com.example.model.request.BookRequest;
 import com.example.response.ErrorResponse;
 import com.example.service.ProjectService;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.*;
-import io.micronaut.inject.validation.RequiresValidation;
 import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,8 +22,6 @@ import java.util.List;
 public class ProjectController {
 
     private ProjectService service;
-//    @Inject
-//    ProjectService service;
 
     @Inject
     ProjectController(ProjectService service) {
@@ -57,9 +56,7 @@ public class ProjectController {
         }
     }
 
-    /*
-        This method is used to add an author to the author table
-    */
+
     @Post("/authors")
     @Consumes("application/json; charset=utf-8")
     @Produces("application/json; charset=utf-8")
@@ -76,12 +73,12 @@ public class ProjectController {
     }
 
     @Post("/books")
-    @Consumes("application/json; charset=utf-8")
-    @Produces("application/json; charset=utf-8")
-    @RequiresValidation
-    public HttpResponse addBook(@Body  Book book) {
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public HttpResponse addBook( BookRequest book){
+        BookDTO bookDTO = new BookDTO(book.getName(), book.getIsbn(), book.getPrice());
         try {
-            Book savedBook = service.addBook(book);
+            Book savedBook = service.addBook(bookDTO);
             return HttpResponse.ok(savedBook);
         }
         catch(BadRequestException ex){

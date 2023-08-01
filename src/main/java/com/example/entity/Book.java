@@ -1,6 +1,5 @@
 package com.example.entity;
 
-import io.micronaut.serde.annotation.Serdeable;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,9 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Serdeable
 @EqualsAndHashCode(callSuper = false)
-@Table(name = "book", indexes = {
+@Table(name = "book_new", indexes = {
         @Index(name = "book_id_index", columnList = "id")
 }, uniqueConstraints = @UniqueConstraint(columnNames = {"isbn"}))
 public class Book {
