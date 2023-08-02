@@ -1,5 +1,6 @@
 package com.example.entity;
 
+import io.micronaut.serde.annotation.Serdeable;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Serdeable
 @Table(name = "book_author_I", indexes = {
         @Index(name = "book_id_index", columnList = "book_id"),
         @Index(name = "author_id_index", columnList = "author_id")
@@ -27,6 +29,10 @@ public class Book_Author {
     @ManyToOne
     @JoinColumn(name = "author_id")
     private Author author;
-    // other fields and methods
+
+    public Book_Author(Book book, Author author) {
+        this.book = book;
+        this.author = author;
+    }
 
 }

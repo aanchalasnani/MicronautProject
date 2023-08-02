@@ -16,9 +16,8 @@ import java.util.Optional;
 @Builder
 @Introspected
 @Serdeable
-public class BookRequest {
+public class AuthorRequest {
     private String name;
-    private int isbn;
-    private int price;
-    private Optional<List<AuthorRequest>> authorList;
+    private String emailId;
+    private Optional<List<BookRequest>> bookList;
 }
