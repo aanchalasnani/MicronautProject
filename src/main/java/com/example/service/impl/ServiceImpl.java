@@ -6,6 +6,7 @@ import com.example.entity.Book_Author;
 import com.example.exception.BadRequestException;
 import com.example.exception.NotFoundException;
 import com.example.model.dto.AuthorDTO;
+import com.example.model.dto.BookAuthorDTO;
 import com.example.model.dto.BookDTO;
 import com.example.model.response.AuthorResponse;
 import com.example.model.response.BookResponse;
@@ -98,8 +99,24 @@ public class ServiceImpl implements Service {
     }
 
     @Override
-    public Book_Author addBookAuthor(Book_Author bookAuthor) {
-        return bookAuthorRepository.save(bookAuthor);
+    public BookAuthorDTO addBookAuthor(int authorId, int bookId ) throws NotFoundException{
+        Book_Author bookAuthor = validateBookAuthor(authorId, bookId);
+        Book_Author savedBookAuthor = bookAuthorRepository.save(bookAuthor);
+        BookAuthorDTO bookAuthorDTO = mapBookAuthorToDTO(savedBookAuthor);
+        return bookAuthorDTO;
+    }
+
+    Book_Author validateBookAuthor(int authorId, int bookId) throws NotFoundException {
+        Optional<Book> book = bookRepository.findById(bookId);
+        if(book.isEmpty()){
+            throw new NotFoundException("Not found", "Book with id : "+bookId+" does not exist" );
+        }
+        Optional<Author> author = authorRepository.findById(authorId);
+        if(author.isEmpty()){
+            throw new NotFoundException("Not found", "Author with id : "+authorId+" does not exist" );
+
+        }
+        return new Book_Author(book.get(), author.get());
     }
 
     @Override
@@ -193,6 +210,14 @@ public class ServiceImpl implements Service {
         authorDTO.setName(author.getName());
         authorDTO.setEmail(author.getEmailId());
         return authorDTO;
+    }
+
+    private BookAuthorDTO mapBookAuthorToDTO(Book_Author bookAuthor){
+        BookAuthorDTO bookAuthorDTO = new BookAuthorDTO();
+        bookAuthorDTO.setAuthor(bookAuthor.getAuthor());
+        bookAuthorDTO.setBook(bookAuthor.getBook());
+        bookAuthorDTO.setId(bookAuthor.getId());
+        return bookAuthorDTO;
     }
 
 }

@@ -1,10 +1,10 @@
 package com.example.service;
 
 import com.example.entity.Author;
-import com.example.entity.Book_Author;
 import com.example.exception.BadRequestException;
 import com.example.exception.NotFoundException;
 import com.example.model.dto.AuthorDTO;
+import com.example.model.dto.BookAuthorDTO;
 import com.example.model.dto.BookDTO;
 import com.example.model.response.AuthorResponse;
 import com.example.model.response.BookResponse;
@@ -16,7 +16,7 @@ public interface Service {
     List<BookDTO> getAllBooks();
     BookResponse addBook(BookDTO bookDTO) throws BadRequestException;
     BookResponse addBookWithAuthorList(BookDTO bookDTO, List<AuthorDTO> authorDTOList) throws BadRequestException;
-    Book_Author addBookAuthor(Book_Author bookAuthor);
+    BookAuthorDTO addBookAuthor(int authorId, int bookId) throws NotFoundException;
     AuthorResponse addAuthor(AuthorDTO authorDTO) throws BadRequestException;
     Author getAuthorById(int authorId) throws NotFoundException;
     List<BookDTO> getBookByAuthorId(int authorId)  throws NotFoundException;

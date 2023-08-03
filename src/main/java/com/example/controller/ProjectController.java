@@ -5,6 +5,7 @@ import com.example.exception.NotFoundException;
 import com.example.model.dto.AuthorDTO;
 import com.example.model.dto.BookDTO;
 import com.example.model.request.AuthorRequest;
+import com.example.model.request.BookAuthorRequest;
 import com.example.model.request.BookRequest;
 import com.example.model.response.AuthorResponse;
 import com.example.model.response.BookResponse;
@@ -122,7 +123,20 @@ public class ProjectController {
         try {
             return HttpResponse.ok(service.getBookByAuthorId(authorId));
         } catch (NotFoundException ex) {
-            ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST.getCode(), ex.getMessage());
+            ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND.getCode(), ex.getMessage());
+            return HttpResponse.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        }
+    }
+
+    @Post("/books/author")
+    @Consumes("application/json; charset=utf-8")
+    @Produces("application/json; charset=utf-8")
+    public HttpResponse addBookAuthor(@Body BookAuthorRequest bookAuthorRequest) {
+        try {
+            return HttpResponse.ok(service.addBookAuthor(bookAuthorRequest.getAuthorId(), bookAuthorRequest.getBookId()));
+        }
+        catch(NotFoundException ex) {
+            ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND.getCode(), ex.getMessage());
             return HttpResponse.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
     }
