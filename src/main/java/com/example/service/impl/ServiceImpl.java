@@ -3,13 +3,14 @@ package com.example.service.impl;
 import com.example.entity.Author;
 import com.example.entity.Book;
 import com.example.entity.Book_Author;
-import com.example.exception.BadRequestException;
 import com.example.exception.NotFoundException;
 import com.example.model.dto.AuthorDTO;
 import com.example.model.dto.BookAuthorDTO;
 import com.example.model.dto.BookDTO;
-import com.example.model.response.AuthorResponse;
-import com.example.model.response.BookResponse;
+import com.example.model.request.CreateAuthorRequest;
+import com.example.model.request.CreateBookRequest;
+import com.example.model.response.CreateAuthorResponse;
+import com.example.model.response.CreateBookResponse;
 import com.example.repository.AuthorRepository;
 import com.example.repository.BookAuthorRepository;
 import com.example.repository.BookRepository;
@@ -58,81 +59,97 @@ public class ServiceImpl implements Service {
         return booksDTO;
     }
 
-    @Override
-    public BookResponse addBook(BookDTO bookDTO) throws BadRequestException {
-        validateBook(bookDTO);
-
-        Book book = new Book();
-        book.setName(bookDTO.getName());
-        book.setIsbn(bookDTO.getIsbn());
-        book.setPrice(bookDTO.getPrice());
-
+    public CreateBookResponse addBook(BookDTO bookDTO) {
+        Book book = mapBookDTOToBook(bookDTO);
         Book savedBook = bookRepository.save(book);
-        return BookResponse.builder().bookId(savedBook.getId()).status("SuccessFully Added").build();
-
+        return CreateBookResponse.builder().bookId(savedBook.getId()).status("SuccessFully Added Book").build();
     }
 
-    private void validateBook(BookDTO bookDTO) throws BadRequestException {
-        Optional<Book> queryBook =bookRepository.checkDuplicateBookName(bookDTO.getName());
-
-        if(queryBook.isPresent()){
-            throw new BadRequestException("Bad Request Exception", "Book with name " + bookDTO.getName() + " already exists");
-        }
-    }
-
-    @Override
-    public BookResponse addBookWithAuthorList(BookDTO bookDTO, List<AuthorDTO> authorDTOList) throws BadRequestException{
-        validateBook(bookDTO);
-
+    public CreateBookResponse addBookWithAuthors(BookDTO bookDTO, List<Integer> authorIds) throws NotFoundException{
         Book book = this.mapBookDTOToBook(bookDTO);
         Book savedBook = bookRepository.save(book);
 
-        for(AuthorDTO authorDTO : authorDTOList) {
-            Author author = this.mapAuthorDTOToAuthor(authorDTO);
-            Author savedAuthor = authorRepository.save(author);
-
-            bookAuthorRepository.save(new Book_Author(savedBook, savedAuthor));
+        for(Integer authorId : authorIds) {
+            validateAuthor(authorId);
+            Optional<Author> existingAuthor = authorRepository.findById(authorId);
+            bookAuthorRepository.save(new Book_Author(savedBook, existingAuthor.get()));
         }
-        return BookResponse.builder()
+        return CreateBookResponse.builder()
                 .status("Successfully Added Book")
                 .bookId(savedBook.getId()).build();
     }
 
+    void validateAuthor(int authorId) throws NotFoundException{
+        if(authorRepository.findById(authorId).isEmpty())
+        {
+            throw new NotFoundException("Not found", "Author with authorId : "+ authorId +" does not exist");
+        }
+    }
+
     @Override
     public BookAuthorDTO addBookAuthor(int authorId, int bookId ) throws NotFoundException{
-        Book_Author bookAuthor = validateBookAuthor(authorId, bookId);
+        validateBookAuthor(authorId, bookId);
+        Book_Author bookAuthor = new Book_Author(bookRepository.findById(bookId).orElse(null), authorRepository.findById(authorId).orElse(null));
         Book_Author savedBookAuthor = bookAuthorRepository.save(bookAuthor);
         BookAuthorDTO bookAuthorDTO = mapBookAuthorToDTO(savedBookAuthor);
         return bookAuthorDTO;
     }
 
-    Book_Author validateBookAuthor(int authorId, int bookId) throws NotFoundException {
-        Optional<Book> book = bookRepository.findById(bookId);
-        if(book.isEmpty()){
+    void validateBookAuthor(int authorId, int bookId) throws NotFoundException {
+        if(bookRepository.findById(bookId).isEmpty()){
             throw new NotFoundException("Not found", "Book with id : "+bookId+" does not exist" );
         }
-        Optional<Author> author = authorRepository.findById(authorId);
-        if(author.isEmpty()){
+        if(authorRepository.findById(authorId).isEmpty()){
             throw new NotFoundException("Not found", "Author with id : "+authorId+" does not exist" );
 
         }
-        return new Book_Author(book.get(), author.get());
+    }
+
+    public CreateAuthorResponse addAuthor(AuthorDTO authorDTO) {
+        Author author = mapAuthorDTOToAuthor(authorDTO);
+        Author savedAuthor = authorRepository.save(author);
+        return CreateAuthorResponse.builder().authorId(savedAuthor.getId()).status("Author SuccessFully Added.").build();
+    }
+
+    public CreateAuthorResponse addAuthorWithBooks(AuthorDTO authorDTO, List<Integer> bookIds) throws NotFoundException{
+        Author author = this.mapAuthorDTOToAuthor(authorDTO);
+        Author savedAuthor = authorRepository.save(author);
+
+        for(Integer bookId : bookIds) {
+            validateBook(bookId);
+            Optional<Book> existingBook = bookRepository.findById(bookId);
+            bookAuthorRepository.save(new Book_Author(existingBook.get(), savedAuthor));
+        }
+        return CreateAuthorResponse.builder()
+                .status("Successfully Added Author")
+                .authorId(savedAuthor.getId())
+                .build();
+    }
+
+    void validateBook(int bookId) throws NotFoundException{
+        if(bookRepository.findById(bookId).isEmpty()) throw new NotFoundException("Not found", "Book with BookId : "+ bookId+" does not exist");
     }
 
     @Override
-    public AuthorResponse addAuthor(AuthorDTO authorDTO) throws BadRequestException {
-        validateAuthor(authorDTO);
-        Author author = mapAuthorDTOToAuthor(authorDTO);
-        Author savedAuthor = authorRepository.save(author);
-        return AuthorResponse.builder().authorId(savedAuthor.getId()).status("Author SuccessFully Added.").build();
-    }
-
-    private void validateAuthor(AuthorDTO authorDTO) throws BadRequestException {
-        Optional<Author> existingAuthor = authorRepository.findByEmailId(authorDTO.getEmail());
-        if (existingAuthor.isPresent()) {
-            throw new BadRequestException("Bad Request Exception","Author with email " + authorDTO.getEmail() + " already exists");
+    public CreateAuthorResponse createAuthor(CreateAuthorRequest createAuthorRequest) throws NotFoundException{
+        AuthorDTO authorDTO = new AuthorDTO(createAuthorRequest.getName(), createAuthorRequest.getEmailId());
+        if(createAuthorRequest.getBookIds()!=null) {
+            return addAuthorWithBooks(authorDTO, createAuthorRequest.getBookIds());
+        }else {
+            return addAuthor(authorDTO);
         }
     }
+
+    @Override
+    public CreateBookResponse createBook(CreateBookRequest createBookRequest) throws NotFoundException {
+        BookDTO bookDTO = new BookDTO(createBookRequest.getName(), createBookRequest.getIsbn(), createBookRequest.getPrice());
+        if(createBookRequest.getAuthorIds()!=null) {
+            return addBookWithAuthors(bookDTO, createBookRequest.getAuthorIds());
+        }else {
+            return addBook(bookDTO);
+        }
+    }
+
 
     @Override
     public Author getAuthorById(int authorId) throws NotFoundException {
@@ -151,33 +168,13 @@ public class ServiceImpl implements Service {
 
         List<BookDTO> bookList = new ArrayList<>();
         validateAuthorById(authorId);
-        List<Book_Author> bookAuthorList = bookAuthorRepository.findAll();
-        for(Book_Author bookAuthor : bookAuthorList) {
-            if(bookAuthor.getAuthor().getId() == authorId) {
-                Book authorBook = bookRepository.findById(bookAuthor.getBook().getId()).orElse(null);
-                BookDTO bookDTO = mapBookTOBookDTO(authorBook);
+        List<Integer> bookIds = bookAuthorRepository.findBookAuthorMapping(authorId);
+        for(Integer bookId : bookIds) {
+                Book book = bookRepository.findById(bookId).orElse(null);
+                BookDTO bookDTO = mapBookTOBookDTO(book);
                 bookList.add(bookDTO);
-            }
         }
         return bookList;
-    }
-
-    @Override
-    public AuthorResponse addAuthorWithBookList(AuthorDTO authorDTO, List<BookDTO> bookDTOList) throws BadRequestException {
-        validateAuthor(authorDTO);
-        Author author = mapAuthorDTOToAuthor(authorDTO);
-        Author savedAuthor =  authorRepository.save(author);
-
-        for(BookDTO bookDTO : bookDTOList) {
-            Book book = this.mapBookDTOToBook(bookDTO);
-            Book savedBook = bookRepository.save(book);
-
-            bookAuthorRepository.save(new Book_Author(savedBook, savedAuthor));
-        }
-        return AuthorResponse.builder()
-                .status("Successfully Added Author")
-                .authorId(savedAuthor.getId()).build();
-
     }
 
     private BookDTO mapBookTOBookDTO(Book book) {

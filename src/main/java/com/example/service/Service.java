@@ -1,24 +1,23 @@
 package com.example.service;
 
 import com.example.entity.Author;
-import com.example.exception.BadRequestException;
 import com.example.exception.NotFoundException;
 import com.example.model.dto.AuthorDTO;
 import com.example.model.dto.BookAuthorDTO;
 import com.example.model.dto.BookDTO;
-import com.example.model.response.AuthorResponse;
-import com.example.model.response.BookResponse;
+import com.example.model.request.CreateAuthorRequest;
+import com.example.model.request.CreateBookRequest;
+import com.example.model.response.CreateAuthorResponse;
+import com.example.model.response.CreateBookResponse;
 
 import java.util.List;
 
 public interface Service {
     List<AuthorDTO> getAllAuthors();
     List<BookDTO> getAllBooks();
-    BookResponse addBook(BookDTO bookDTO) throws BadRequestException;
-    BookResponse addBookWithAuthorList(BookDTO bookDTO, List<AuthorDTO> authorDTOList) throws BadRequestException;
     BookAuthorDTO addBookAuthor(int authorId, int bookId) throws NotFoundException;
-    AuthorResponse addAuthor(AuthorDTO authorDTO) throws BadRequestException;
     Author getAuthorById(int authorId) throws NotFoundException;
     List<BookDTO> getBookByAuthorId(int authorId)  throws NotFoundException;
-    AuthorResponse addAuthorWithBookList(AuthorDTO authorDTO, List<BookDTO> bookDTOList) throws BadRequestException;
+    CreateAuthorResponse createAuthor(CreateAuthorRequest createAuthorRequest) throws NotFoundException;
+    CreateBookResponse createBook(CreateBookRequest createBookRequest) throws  NotFoundException;
 }

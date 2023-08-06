@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Entity
 @Serdeable
-@Table(name = "book_author_i", indexes = {
+@Table(name = "book_author", indexes = {
         @Index(name = "book_id_index", columnList = "book_id"),
         @Index(name = "author_id_index", columnList = "author_id")
 }, uniqueConstraints = {

@@ -8,7 +8,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
-import java.util.Optional;
 
 @Getter
 @Setter
@@ -16,8 +15,8 @@ import java.util.Optional;
 @Builder
 @Introspected
 @Serdeable
-public class AuthorRequest {
+public class CreateAuthorRequest {
     private String name;
     private String emailId;
-    private Optional<List<BookRequest>> bookList;
+    private List<Integer> bookIds;
 }
