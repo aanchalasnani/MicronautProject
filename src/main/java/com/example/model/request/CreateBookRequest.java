@@ -16,8 +16,8 @@ import java.util.List;
 @Introspected
 @Serdeable
 public class CreateBookRequest {
-    private String name;
-    private int isbn;
-    private int price;
-    private List<Integer> authorIds;
+    private final String name;
+    private final int isbn;
+    private final int price;
+    private final List<Integer> authorIds;
 }

@@ -14,6 +14,6 @@ import lombok.Setter;
 @Introspected
 @Serdeable
 public class BookAuthorRequest {
-    private int authorId;
-    private int bookId;
+    private final int authorId;
+    private final int bookId;
 }

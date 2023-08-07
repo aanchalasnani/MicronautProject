@@ -16,7 +16,7 @@ import java.util.List;
 @Introspected
 @Serdeable
 public class CreateAuthorRequest {
-    private String name;
-    private String emailId;
-    private List<Integer> bookIds;
+    private final String name;
+    private final String emailId;
+    private final List<Integer> bookIds;
 }

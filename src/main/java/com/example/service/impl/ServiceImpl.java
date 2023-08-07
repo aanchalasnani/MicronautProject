@@ -30,7 +30,7 @@ public class ServiceImpl implements Service {
     private final BookAuthorRepository bookAuthorRepository;
 
     @Inject
-    ServiceImpl(AuthorRepository authorRepository, BookRepository bookRepository, BookAuthorRepository bookAuthorRepository) {
+    public ServiceImpl(AuthorRepository authorRepository, BookRepository bookRepository, BookAuthorRepository bookAuthorRepository) {
         this.authorRepository = authorRepository;
         this.bookRepository = bookRepository;
         this.bookAuthorRepository = bookAuthorRepository;
@@ -42,7 +42,7 @@ public class ServiceImpl implements Service {
         List<AuthorDTO> authorsDTO = new ArrayList<>();
         List<Author> authors = authorRepository.findAll();
         for(Author author : authors) {
-            AuthorDTO authorDTO = this.mapAuthorToAuthorDTO(author);
+            AuthorDTO authorDTO = mapAuthorToAuthorDTO(author);
             authorsDTO.add(authorDTO);
         }
         return authorsDTO;
@@ -53,20 +53,20 @@ public class ServiceImpl implements Service {
         List<BookDTO> booksDTO = new ArrayList<>();
         List<Book> books = bookRepository.findAll();
         for(Book book : books) {
-            BookDTO bookDTO = this.mapBookTOBookDTO(book);
+            BookDTO bookDTO = mapBookTOBookDTO(book);
             booksDTO.add(bookDTO);
         }
         return booksDTO;
     }
 
-    public CreateBookResponse addBook(BookDTO bookDTO) {
+    private CreateBookResponse addBook(BookDTO bookDTO) {
         Book book = mapBookDTOToBook(bookDTO);
         Book savedBook = bookRepository.save(book);
         return CreateBookResponse.builder().bookId(savedBook.getId()).status("SuccessFully Added Book").build();
     }
 
     public CreateBookResponse addBookWithAuthors(BookDTO bookDTO, List<Integer> authorIds) throws NotFoundException{
-        Book book = this.mapBookDTOToBook(bookDTO);
+        Book book = mapBookDTOToBook(bookDTO);
         Book savedBook = bookRepository.save(book);
 
         for(Integer authorId : authorIds) {
@@ -79,7 +79,7 @@ public class ServiceImpl implements Service {
                 .bookId(savedBook.getId()).build();
     }
 
-    void validateAuthor(int authorId) throws NotFoundException{
+    private void validateAuthor(int authorId) throws NotFoundException{
         if(authorRepository.findById(authorId).isEmpty())
         {
             throw new NotFoundException("Not found", "Author with authorId : "+ authorId +" does not exist");
@@ -95,7 +95,7 @@ public class ServiceImpl implements Service {
         return bookAuthorDTO;
     }
 
-    void validateBookAuthor(int authorId, int bookId) throws NotFoundException {
+    private void validateBookAuthor(int authorId, int bookId) throws NotFoundException {
         if(bookRepository.findById(bookId).isEmpty()){
             throw new NotFoundException("Not found", "Book with id : "+bookId+" does not exist" );
         }
@@ -105,14 +105,14 @@ public class ServiceImpl implements Service {
         }
     }
 
-    public CreateAuthorResponse addAuthor(AuthorDTO authorDTO) {
+    private CreateAuthorResponse addAuthor(AuthorDTO authorDTO) {
         Author author = mapAuthorDTOToAuthor(authorDTO);
         Author savedAuthor = authorRepository.save(author);
         return CreateAuthorResponse.builder().authorId(savedAuthor.getId()).status("Author SuccessFully Added.").build();
     }
 
-    public CreateAuthorResponse addAuthorWithBooks(AuthorDTO authorDTO, List<Integer> bookIds) throws NotFoundException{
-        Author author = this.mapAuthorDTOToAuthor(authorDTO);
+    private CreateAuthorResponse addAuthorWithBooks(AuthorDTO authorDTO, List<Integer> bookIds) throws NotFoundException{
+        Author author = mapAuthorDTOToAuthor(authorDTO);
         Author savedAuthor = authorRepository.save(author);
 
         for(Integer bookId : bookIds) {
@@ -126,7 +126,7 @@ public class ServiceImpl implements Service {
                 .build();
     }
 
-    void validateBook(int bookId) throws NotFoundException{
+    private void validateBook(int bookId) throws NotFoundException{
         if(bookRepository.findById(bookId).isEmpty()) throw new NotFoundException("Not found", "Book with BookId : "+ bookId+" does not exist");
     }
 
