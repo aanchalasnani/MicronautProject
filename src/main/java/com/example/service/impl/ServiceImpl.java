@@ -65,7 +65,7 @@ public class ServiceImpl implements Service {
         return CreateBookResponse.builder().bookId(savedBook.getId()).status("SuccessFully Added Book").build();
     }
 
-    public CreateBookResponse addBookWithAuthors(BookDTO bookDTO, List<Integer> authorIds) throws NotFoundException{
+    public CreateBookResponse addBookByAuthorIds(BookDTO bookDTO, List<Integer> authorIds) throws NotFoundException{
         Book book = mapBookDTOToBook(bookDTO);
         Book savedBook = bookRepository.save(book);
 
@@ -111,7 +111,7 @@ public class ServiceImpl implements Service {
         return CreateAuthorResponse.builder().authorId(savedAuthor.getId()).status("Author SuccessFully Added.").build();
     }
 
-    private CreateAuthorResponse addAuthorWithBooks(AuthorDTO authorDTO, List<Integer> bookIds) throws NotFoundException{
+    private CreateAuthorResponse addAuthorByBookIds(AuthorDTO authorDTO, List<Integer> bookIds) throws NotFoundException{
         Author author = mapAuthorDTOToAuthor(authorDTO);
         Author savedAuthor = authorRepository.save(author);
 
@@ -134,7 +134,7 @@ public class ServiceImpl implements Service {
     public CreateAuthorResponse createAuthor(CreateAuthorRequest createAuthorRequest) throws NotFoundException{
         AuthorDTO authorDTO = new AuthorDTO(createAuthorRequest.getName(), createAuthorRequest.getEmailId());
         if(createAuthorRequest.getBookIds()!=null) {
-            return addAuthorWithBooks(authorDTO, createAuthorRequest.getBookIds());
+            return addAuthorByBookIds(authorDTO, createAuthorRequest.getBookIds());
         }else {
             return addAuthor(authorDTO);
         }
@@ -144,7 +144,7 @@ public class ServiceImpl implements Service {
     public CreateBookResponse createBook(CreateBookRequest createBookRequest) throws NotFoundException {
         BookDTO bookDTO = new BookDTO(createBookRequest.getName(), createBookRequest.getIsbn(), createBookRequest.getPrice());
         if(createBookRequest.getAuthorIds()!=null) {
-            return addBookWithAuthors(bookDTO, createBookRequest.getAuthorIds());
+            return addBookByAuthorIds(bookDTO, createBookRequest.getAuthorIds());
         }else {
             return addBook(bookDTO);
         }

@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Serdeable
 public class BookAuthorDTO {
-    int id;
-    Book book;
-    Author author;
+    private int id;
+    private Book book;
+    private Author author;
 }

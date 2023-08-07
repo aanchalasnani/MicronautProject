@@ -12,13 +12,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Serdeable
 public class AuthorDTO {
-    int id;
-    String name;
-    String email;
+    private int id;
+    private String name;
+    private String email;
 
     public AuthorDTO(String name, String email) {
         this.name = name;
         this.email = email;
     }
-
 }

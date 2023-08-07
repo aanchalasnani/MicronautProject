@@ -14,11 +14,10 @@ import java.io.Serializable;
 @NoArgsConstructor
 @Serdeable
 public class BookDTO implements Serializable {
-    int id;
-    String name;
-    int isbn;
-    int price;
-
+    private int id;
+    private String name;
+    private int isbn;
+    private int price;
 
     public BookDTO(String name, int isbn, int price) {
         this.isbn = isbn;
