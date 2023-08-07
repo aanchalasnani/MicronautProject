@@ -6,29 +6,33 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@IdClass(EmbeddedBookAuthor.class)
+@Serdeable
 @Table(name = "book_author", indexes = {
         @Index(name = "book_id_index", columnList = "book_id"),
         @Index(name = "author_id_index", columnList = "author_id")
-})
+}, uniqueConstraints = {
+        @UniqueConstraint(name = "book_author_uniq", columnNames = {"book_id", "author_id"})})
 public class Book_Author {
 
     @Id
+    @GeneratedValue
+    private int id;
+
     @ManyToOne
     @JoinColumn(name = "book_id")
     private Book book;
 
-    @Id
     @ManyToOne
     @JoinColumn(name = "author_id")
     private Author author;
 
-    // other fields and methods
+    public Book_Author(Book book, Author author) {
+        this.book = book;
+        this.author = author;
+    }
 
 }

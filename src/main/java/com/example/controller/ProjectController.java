@@ -1,16 +1,19 @@
 package com.example.controller;
 
 import com.example.entity.Author;
-import com.example.entity.Book;
-import com.example.exception.BadRequestException;
 import com.example.exception.NotFoundException;
-import com.example.response.ErrorResponse;
-import com.example.service.ProjectService;
+import com.example.model.dto.AuthorDTO;
+import com.example.model.dto.BookAuthorDTO;
+import com.example.model.dto.BookDTO;
+import com.example.model.request.BookAuthorRequest;
+import com.example.model.request.CreateAuthorRequest;
+import com.example.model.request.CreateBookRequest;
+import com.example.model.response.CreateAuthorResponse;
+import com.example.service.Service;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.*;
-import io.micronaut.inject.validation.RequiresValidation;
 import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,8 +23,12 @@ import java.util.List;
 @Slf4j
 public class ProjectController {
 
+    private final Service service;
+
     @Inject
-    ProjectService service;
+    ProjectController(Service service) {
+        this.service = service;
+    }
 
     @Get("/")
     public String getHello() {
@@ -30,69 +37,70 @@ public class ProjectController {
 
     @Get("/authors")
     @Produces(MediaType.APPLICATION_JSON)
-    public HttpResponse<List<Author>> getAllAuthors() {
+    public HttpResponse<List<AuthorDTO>> getAllAuthors() {
         return HttpResponse.ok(service.getAllAuthors());
     }
 
     @Get("/books")
     @Produces(MediaType.APPLICATION_JSON)
-    public HttpResponse getAllBooks() {
+    public HttpResponse<List<BookDTO>> getAllBooks() {
         return HttpResponse.ok(service.getAllBooks());
     }
 
-    @Get("/authors/{author-id}")
-    public HttpResponse getAuthorByid( @PathVariable int authorId) {
+    @Get("/authors/{authorId}")
+    public HttpResponse<Author> getAuthorById(@PathVariable int authorId) {
         try {
             return HttpResponse.ok(service.getAuthorById(authorId));
         }
         catch(NotFoundException ex) {
-            ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST.getCode(), ex.getMessage());
-            return  HttpResponse.status(HttpStatus.NOT_FOUND).body(errorResponse);
+            return  HttpResponse.status(HttpStatus.NOT_FOUND, ex.getMessage());
         }
     }
 
-    /*
-        This method is used to add an author to the author table
-    */
     @Post("/authors")
     @Consumes("application/json; charset=utf-8")
     @Produces("application/json; charset=utf-8")
-    public HttpResponse addAuthor(@Body Author author) {
-        // Disable serialization for the Author entity class using @Serdeable
+    public HttpResponse<CreateAuthorResponse> addAuthor(@Body CreateAuthorRequest createAuthorRequest) {
         try {
-            Author savedAuthor = service.addAuthor(author);
-            return HttpResponse.ok(savedAuthor);
+            return HttpResponse.ok(service.createAuthor(createAuthorRequest));
         }
-        catch(BadRequestException ex) {
-            ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST.getCode(), ex.getMessage());
-            return HttpResponse.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        catch (NotFoundException ex) {
+            return HttpResponse.status(HttpStatus.NOT_FOUND,ex.getMessage());
         }
     }
 
     @Post("/books")
-    @Consumes("application/json; charset=utf-8")
-    @Produces("application/json; charset=utf-8")
-    @RequiresValidation
-    public HttpResponse addBook(@Body  Book book) {
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public HttpResponse addBook(@Body CreateBookRequest createBookRequest) {
         try {
-            Book savedBook = service.addBook(book);
-            return HttpResponse.ok(savedBook);
+            return HttpResponse.ok(service.createBook(createBookRequest));
         }
-        catch(BadRequestException ex){
-            ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST.getCode(), ex.getMessage());
-            return HttpResponse.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        catch (NotFoundException ex) {
+            return HttpResponse.status(HttpStatus.NOT_FOUND, ex.getMessage());
         }
     }
 
     @Get("/authors/{authorId}/books")
     @Consumes("application/json; charset=utf-8")
     @Produces("application/json; charset=utf-8")
-    public HttpResponse getBooksByAuthorId(@PathVariable int authorId) {
+    public HttpResponse<List<BookDTO>> getBooksByAuthorId(@PathVariable int authorId) {
         try {
             return HttpResponse.ok(service.getBookByAuthorId(authorId));
         } catch (NotFoundException ex) {
-            ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST.getCode(), ex.getMessage());
-            return HttpResponse.status(HttpStatus.NOT_FOUND).body(errorResponse);
+            return HttpResponse.status(HttpStatus.NOT_FOUND,ex.getMessage());
+        }
+    }
+
+    @Post("/books/author")
+    @Consumes("application/json; charset=utf-8")
+    @Produces("application/json; charset=utf-8")
+    public HttpResponse<BookAuthorDTO> addBookAuthor(@Body BookAuthorRequest bookAuthorRequest) {
+        try {
+            return HttpResponse.ok(service.addBookAuthor(bookAuthorRequest.getAuthorId(), bookAuthorRequest.getBookId()));
+        }
+        catch(NotFoundException ex) {
+            return HttpResponse.status(HttpStatus.NOT_FOUND,ex.getMessage());
         }
     }
 }
