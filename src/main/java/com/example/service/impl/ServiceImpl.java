@@ -132,7 +132,8 @@ public class ServiceImpl implements Service {
 
     @Override
     public CreateAuthorResponse createAuthor(CreateAuthorRequest createAuthorRequest) throws NotFoundException{
-        AuthorDTO authorDTO = new AuthorDTO(createAuthorRequest.getName(), createAuthorRequest.getEmailId());
+        AuthorDTO authorDTO = new AuthorDTO();
+        authorDTO.builder().name(createAuthorRequest.getName()).email(createAuthorRequest.getEmailId()).build();
         if(createAuthorRequest.getBookIds()!=null) {
             return addAuthorByBookIds(authorDTO, createAuthorRequest.getBookIds());
         }else {
@@ -142,7 +143,8 @@ public class ServiceImpl implements Service {
 
     @Override
     public CreateBookResponse createBook(CreateBookRequest createBookRequest) throws NotFoundException {
-        BookDTO bookDTO = new BookDTO(createBookRequest.getName(), createBookRequest.getIsbn(), createBookRequest.getPrice());
+        BookDTO bookDTO = new BookDTO();
+        bookDTO.builder().name(createBookRequest.getName()).isbn(createBookRequest.getIsbn()).price(createBookRequest.getPrice()).build();
         if(createBookRequest.getAuthorIds()!=null) {
             return addBookByAuthorIds(bookDTO, createBookRequest.getAuthorIds());
         }else {

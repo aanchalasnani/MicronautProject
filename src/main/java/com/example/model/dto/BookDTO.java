@@ -18,10 +18,4 @@ public class BookDTO implements Serializable {
     private String name;
     private int isbn;
     private int price;
-
-    public BookDTO(String name, int isbn, int price) {
-        this.isbn = isbn;
-        this.name = name;
-        this.price = price;
-    }
 }

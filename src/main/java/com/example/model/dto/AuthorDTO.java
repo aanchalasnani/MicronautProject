@@ -15,9 +15,4 @@ public class AuthorDTO {
     private int id;
     private String name;
     private String email;
-
-    public AuthorDTO(String name, String email) {
-        this.name = name;
-        this.email = email;
-    }
 }
