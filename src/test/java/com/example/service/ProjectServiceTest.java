@@ -1,62 +1,63 @@
-//package com.example.service;
-//
-//import com.example.entity.Author;
-//import com.example.entity.Book;
-//import com.example.entity.Book_Author;
-//import com.example.exception.BadRequestException;
-//import com.example.exception.NotFoundException;
-//import com.example.repository.AuthorRepository;
-//import com.example.repository.BookAuthorRepository;
-//import com.example.repository.BookRepository;
-//import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
-//import org.junit.jupiter.api.BeforeEach;
-//import org.junit.jupiter.api.Test;
-//import org.mockito.Mock;
-//
-//import java.util.ArrayList;
-//import java.util.List;
-//import java.util.Optional;
-//
-//import static org.junit.jupiter.api.Assertions.assertEquals;
-//import static org.junit.jupiter.api.Assertions.assertThrows;
-//import static org.mockito.Mockito.when;
-//import static org.mockito.MockitoAnnotations.initMocks;
-//
-//@MicronautTest
-//public class ProjectServiceTest {
-//
-//    @Mock
-//    AuthorRepository authorRepository;
-//
-//    @Mock
-//    BookRepository bookRepository;
-//
-//    @Mock
-//    BookAuthorRepository bookAuthorRepository;
-//    ProjectService service;
-//    @BeforeEach
-//    void setup() {
-//        initMocks(this);
-//        service = new ProjectService(authorRepository, bookRepository, bookAuthorRepository);
-//    }
-//
-//
-//    @Test
-//    public void getAllAuthorsTest() {
-//        // Arrange
-//        List<Author> expectedAuthors = new ArrayList<>();
-//        expectedAuthors.add(new Author(1, "John Doe", "john.doe@example.com"));
-//        expectedAuthors.add(new Author(2, "Jane Smith", "jane.smith@example.com"));
-//        when(authorRepository.findAll()).thenReturn(expectedAuthors);
-//
-//        // Act
-//        List<Author> actualAuthors = service.getAllAuthors();
-//
-//        // Assert
-//        assertEquals(expectedAuthors, actualAuthors);
-//
-//    }
-//
+package com.example.service;
+
+import com.example.entity.Author;
+import com.example.model.dto.AuthorDTO;
+import com.example.repository.AuthorRepository;
+import com.example.repository.BookAuthorRepository;
+import com.example.repository.BookRepository;
+import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
+
+@MicronautTest
+public class ProjectServiceTest {
+
+    @Mock
+    AuthorRepository authorRepository;
+
+    @Mock
+    BookRepository bookRepository;
+
+    @Mock
+    BookAuthorRepository bookAuthorRepository;
+
+    @InjectMocks
+    Service service;
+
+    @BeforeEach
+    void setup() {
+        initMocks(this);
+    }
+
+
+    @Test
+    public void getAllAuthorsTest() {
+        List<Author> authors = new ArrayList<>();
+        authors.add(new Author(1, "John Doe", "john@example.com"));
+        when(authorRepository.findAll()).thenReturn(authors);
+
+        List<AuthorDTO> result = service.getAllAuthors();
+
+        assertEquals(1, result.size());
+        AuthorDTO authorDTO = result.get(0);
+        assertEquals(1, authorDTO.getId());
+        assertEquals("John Doe", authorDTO.getName());
+        assertEquals("john@example.com", authorDTO.getEmail());
+
+        // Verify that the repository method was called
+//        verify(authorRepository, times(1)).findAll();
+
+    }
+
 //    @Test
 //    public void getAllBooksTest() {
 //        //arrange
@@ -71,7 +72,7 @@
 //        assertEquals(expectedBooks, actualResponse);
 //
 //    }
-//
+
 //    @Test
 //    public void addBookTest() throws BadRequestException {
 //
@@ -91,7 +92,7 @@
 //        when(bookRepository.findByIsbn(expectedBookWithSameIsbn.getIsbn())).thenReturn(Optional.of(expectedBook));
 //        Exception badRequestExceptionSameIsbn = assertThrows(BadRequestException.class, ()->service.addBook(expectedBookWithSameIsbn));
 //    }
-//
+
 //    @Test
 //    public void addAuthorTest() throws BadRequestException
 //    {
@@ -106,7 +107,7 @@
 //        when(authorRepository.findByEmailId(expectedAuthorWithDuplicateEmail.getEmailId())).thenReturn(Optional.of(expectedAuthor));
 //        Exception badRequestException = assertThrows(BadRequestException.class, ()->service.addAuthor(expectedAuthorWithDuplicateEmail));
 //    }
-//
+
 //    @Test
 //    public void getAuthorByIdTest() throws NotFoundException {
 //        // scenario:1 => getting valid author
@@ -119,7 +120,7 @@
 //        //scenario:2 => author with authorId not found
 //        Exception notFound = assertThrows(NotFoundException.class, ()->service.getAuthorById(2));
 //    }
-//
+
 //    @Test
 //    public void getBookByAuthorIdTest() throws NotFoundException {
 //        //scenario:1
@@ -146,5 +147,5 @@
 //
 //
 //    }
-//
-//}
+
+}
