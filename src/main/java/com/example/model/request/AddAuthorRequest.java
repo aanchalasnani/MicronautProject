@@ -13,7 +13,7 @@ import lombok.Setter;
 @Builder
 @Introspected
 @Serdeable
-public class BookAuthorRequest {
-    private final int authorId;
-    private final int bookId;
+public class AddAuthorRequest {
+    private final String name;
+    private final String emailId;
 }

@@ -15,7 +15,7 @@ import java.util.List;
 @Builder
 @Introspected
 @Serdeable
-public class CreateBookRequest {
+public class AddBookRequest {
     private final String name;
     private final int isbn;
     private final int price;

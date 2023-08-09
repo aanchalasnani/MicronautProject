@@ -7,16 +7,13 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
-
 @Getter
 @Setter
 @AllArgsConstructor
 @Builder
 @Introspected
 @Serdeable
-public class CreateAuthorRequest {
-    private final String name;
-    private final String emailId;
-    private final List<Integer> bookIds;
+public class AddBookAuthorRequest {
+    private final int authorId;
+    private final int bookId;
 }

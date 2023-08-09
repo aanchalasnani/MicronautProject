@@ -2,12 +2,10 @@ package com.example.entity;
 
 import io.micronaut.serde.annotation.Serdeable;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -15,13 +13,14 @@ import lombok.NoArgsConstructor;
 @Serdeable
 @Table(name = "book_new", indexes = {
         @Index(name = "book_id_index", columnList = "id")
-}, uniqueConstraints = @UniqueConstraint(columnNames = {"isbn"}))
+}, uniqueConstraints = @UniqueConstraint(columnNames = {"isbn", "name"}))
 public class Book {
 
     @Id
     @GeneratedValue
     private Integer id;
 
+    @Column(unique = true, name = "name")
     private String name;
 
     private Integer price;

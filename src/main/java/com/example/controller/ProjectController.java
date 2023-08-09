@@ -5,10 +5,10 @@ import com.example.exception.NotFoundException;
 import com.example.model.dto.AuthorDTO;
 import com.example.model.dto.BookAuthorDTO;
 import com.example.model.dto.BookDTO;
-import com.example.model.request.BookAuthorRequest;
-import com.example.model.request.CreateAuthorRequest;
-import com.example.model.request.CreateBookRequest;
-import com.example.model.response.CreateAuthorResponse;
+import com.example.model.request.AddBookAuthorRequest;
+import com.example.model.request.AddAuthorRequest;
+import com.example.model.request.AddBookRequest;
+import com.example.model.response.AddAuthorResponse;
 import com.example.service.Service;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
@@ -60,21 +60,16 @@ public class ProjectController {
     @Post("/authors")
     @Consumes("application/json; charset=utf-8")
     @Produces("application/json; charset=utf-8")
-    public HttpResponse<CreateAuthorResponse> addAuthor(@Body CreateAuthorRequest createAuthorRequest) {
-        try {
-            return HttpResponse.ok(service.createAuthor(createAuthorRequest));
-        }
-        catch (NotFoundException ex) {
-            return HttpResponse.status(HttpStatus.NOT_FOUND,ex.getMessage());
-        }
+    public HttpResponse<AddAuthorResponse> addAuthor(@Body AddAuthorRequest addAuthorRequest) {
+        return HttpResponse.ok(service.addAuthor(addAuthorRequest));
     }
 
     @Post("/books")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public HttpResponse addBook(@Body CreateBookRequest createBookRequest) {
+    public HttpResponse addBook(@Body AddBookRequest addBookRequest) {
         try {
-            return HttpResponse.ok(service.createBook(createBookRequest));
+            return HttpResponse.ok(service.addBook(addBookRequest));
         }
         catch (NotFoundException ex) {
             return HttpResponse.status(HttpStatus.NOT_FOUND, ex.getMessage());
@@ -95,9 +90,9 @@ public class ProjectController {
     @Post("/books/author")
     @Consumes("application/json; charset=utf-8")
     @Produces("application/json; charset=utf-8")
-    public HttpResponse<BookAuthorDTO> addBookAuthor(@Body BookAuthorRequest bookAuthorRequest) {
+    public HttpResponse<BookAuthorDTO> addBookAuthor(@Body AddBookAuthorRequest addBookAuthorRequest) {
         try {
-            return HttpResponse.ok(service.addBookAuthor(bookAuthorRequest.getAuthorId(), bookAuthorRequest.getBookId()));
+            return HttpResponse.ok(service.addBookAuthor(addBookAuthorRequest));
         }
         catch(NotFoundException ex) {
             return HttpResponse.status(HttpStatus.NOT_FOUND,ex.getMessage());

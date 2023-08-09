@@ -7,16 +7,18 @@ import com.example.exception.NotFoundException;
 import com.example.model.dto.AuthorDTO;
 import com.example.model.dto.BookAuthorDTO;
 import com.example.model.dto.BookDTO;
-import com.example.model.request.CreateAuthorRequest;
-import com.example.model.request.CreateBookRequest;
-import com.example.model.response.CreateAuthorResponse;
-import com.example.model.response.CreateBookResponse;
+import com.example.model.request.AddAuthorRequest;
+import com.example.model.request.AddBookAuthorRequest;
+import com.example.model.request.AddBookRequest;
+import com.example.model.response.AddAuthorResponse;
+import com.example.model.response.AddBookResponse;
 import com.example.repository.AuthorRepository;
 import com.example.repository.BookAuthorRepository;
 import com.example.repository.BookRepository;
 import com.example.service.Service;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import jakarta.transaction.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,13 +61,17 @@ public class ServiceImpl implements Service {
         return booksDTO;
     }
 
-    private CreateBookResponse addBook(BookDTO bookDTO) {
+    private AddBookResponse addABook(BookDTO bookDTO) {
         Book book = mapBookDTOToBook(bookDTO);
         Book savedBook = bookRepository.save(book);
-        return CreateBookResponse.builder().bookId(savedBook.getId()).status("SuccessFully Added Book").build();
+        return AddBookResponse.builder()
+                .bookId(savedBook.getId())
+                .status("Success")
+                .build();
     }
 
-    public CreateBookResponse addBookByAuthorIds(BookDTO bookDTO, List<Integer> authorIds) throws NotFoundException{
+    @Transactional
+    public AddBookResponse addBookByAuthorIds(BookDTO bookDTO, List<Integer> authorIds) throws NotFoundException{
         Book book = mapBookDTOToBook(bookDTO);
         Book savedBook = bookRepository.save(book);
 
@@ -74,44 +80,54 @@ public class ServiceImpl implements Service {
             Optional<Author> existingAuthor = authorRepository.findById(authorId);
             bookAuthorRepository.save(new Book_Author(savedBook, existingAuthor.get()));
         }
-        return CreateBookResponse.builder()
-                .status("Successfully Added Book")
-                .bookId(savedBook.getId()).build();
+        return AddBookResponse.builder()
+                .status("Success")
+                .bookId(savedBook.getId())
+                .build();
     }
 
     private void validateAuthor(int authorId) throws NotFoundException{
-        if(authorRepository.findById(authorId).isEmpty())
+        Optional<Author> author = authorRepository.findById(authorId);
+        if(author.isEmpty())
         {
             throw new NotFoundException("Not found", "Author with authorId : "+ authorId +" does not exist");
         }
     }
 
     @Override
-    public BookAuthorDTO addBookAuthor(int authorId, int bookId ) throws NotFoundException{
+    public BookAuthorDTO addBookAuthor(AddBookAuthorRequest addBookAuthorRequest) throws NotFoundException{
+        int authorId = addBookAuthorRequest.getAuthorId();
+        int bookId = addBookAuthorRequest.getBookId();
         validateBookAuthor(authorId, bookId);
-        Book_Author bookAuthor = new Book_Author(bookRepository.findById(bookId).orElse(null), authorRepository.findById(authorId).orElse(null));
+        Book book = bookRepository.findById(bookId).get();
+        Author author = authorRepository.findById(authorId).get();
+        Book_Author bookAuthor = new Book_Author(book,author);
         Book_Author savedBookAuthor = bookAuthorRepository.save(bookAuthor);
-        BookAuthorDTO bookAuthorDTO = mapBookAuthorToDTO(savedBookAuthor);
-        return bookAuthorDTO;
+        return mapBookAuthorToDTO(savedBookAuthor);
     }
 
     private void validateBookAuthor(int authorId, int bookId) throws NotFoundException {
-        if(bookRepository.findById(bookId).isEmpty()){
+        Optional<Book> book = bookRepository.findById(bookId);
+        if(book.isEmpty()){
             throw new NotFoundException("Not found", "Book with id : "+bookId+" does not exist" );
         }
-        if(authorRepository.findById(authorId).isEmpty()){
+        Optional<Author> author = authorRepository.findById(authorId);
+        if(author.isEmpty()){
             throw new NotFoundException("Not found", "Author with id : "+authorId+" does not exist" );
 
         }
     }
 
-    private CreateAuthorResponse addAuthor(AuthorDTO authorDTO) {
+    private AddAuthorResponse addAnAuthor(AuthorDTO authorDTO) {
         Author author = mapAuthorDTOToAuthor(authorDTO);
         Author savedAuthor = authorRepository.save(author);
-        return CreateAuthorResponse.builder().authorId(savedAuthor.getId()).status("Author SuccessFully Added.").build();
+        return AddAuthorResponse.builder()
+                .authorId(savedAuthor.getId())
+                .status("Success")
+                .build();
     }
 
-    private CreateAuthorResponse addAuthorByBookIds(AuthorDTO authorDTO, List<Integer> bookIds) throws NotFoundException{
+    private AddAuthorResponse addAuthorByBookIds(AuthorDTO authorDTO, List<Integer> bookIds) throws NotFoundException {
         Author author = mapAuthorDTOToAuthor(authorDTO);
         Author savedAuthor = authorRepository.save(author);
 
@@ -120,35 +136,36 @@ public class ServiceImpl implements Service {
             Optional<Book> existingBook = bookRepository.findById(bookId);
             bookAuthorRepository.save(new Book_Author(existingBook.get(), savedAuthor));
         }
-        return CreateAuthorResponse.builder()
-                .status("Successfully Added Author")
+        return AddAuthorResponse.builder()
+                .status("Success")
                 .authorId(savedAuthor.getId())
                 .build();
     }
 
-    private void validateBook(int bookId) throws NotFoundException{
+    private void validateBook(int bookId) throws NotFoundException {
         if(bookRepository.findById(bookId).isEmpty()) throw new NotFoundException("Not found", "Book with BookId : "+ bookId+" does not exist");
     }
 
     @Override
-    public CreateAuthorResponse createAuthor(CreateAuthorRequest createAuthorRequest) throws NotFoundException{
-        AuthorDTO authorDTO = new AuthorDTO();
-        authorDTO.builder().name(createAuthorRequest.getName()).email(createAuthorRequest.getEmailId()).build();
-        if(createAuthorRequest.getBookIds()!=null) {
-            return addAuthorByBookIds(authorDTO, createAuthorRequest.getBookIds());
-        }else {
-            return addAuthor(authorDTO);
-        }
+    public AddAuthorResponse addAuthor(AddAuthorRequest addAuthorRequest){
+        AuthorDTO authorDTO = AuthorDTO.builder()
+                .name(addAuthorRequest.getName())
+                .email(addAuthorRequest.getEmailId())
+                .build();
+        return addAnAuthor(authorDTO);
     }
 
     @Override
-    public CreateBookResponse createBook(CreateBookRequest createBookRequest) throws NotFoundException {
-        BookDTO bookDTO = new BookDTO();
-        bookDTO.builder().name(createBookRequest.getName()).isbn(createBookRequest.getIsbn()).price(createBookRequest.getPrice()).build();
-        if(createBookRequest.getAuthorIds()!=null) {
-            return addBookByAuthorIds(bookDTO, createBookRequest.getAuthorIds());
+    public AddBookResponse addBook(AddBookRequest addBookRequest) throws NotFoundException {
+        BookDTO bookDTO = BookDTO.builder()
+                .name(addBookRequest.getName())
+                .isbn(addBookRequest.getIsbn())
+                .price(addBookRequest.getPrice())
+                .build();
+        if(addBookRequest.getAuthorIds()!=null) {
+            return addBookByAuthorIds(bookDTO, addBookRequest.getAuthorIds());
         }else {
-            return addBook(bookDTO);
+            return addABook(bookDTO);
         }
     }
 
@@ -156,11 +173,12 @@ public class ServiceImpl implements Service {
     @Override
     public Author getAuthorById(int authorId) throws NotFoundException {
         validateAuthorById(authorId);
-        return authorRepository.findById(authorId).orElse(null);
+        return authorRepository.findById(authorId).get();
     }
 
     private void validateAuthorById(int authorId) throws NotFoundException {
-        if(authorRepository.findById(authorId).isEmpty()){
+        Optional<Author> author = authorRepository.findById(authorId);
+        if(author.isEmpty()){
             throw new NotFoundException("Not Found Exception", "Author with authorId : " + authorId + " does not exist.");
         }
     }

@@ -7,9 +7,8 @@ import lombok.Getter;
 @Builder
 @Getter
 @Serdeable
-public class CreateBookResponse {
-    private int  bookId;
+public class AddAuthorResponse {
+    private int  authorId;
     private String status;
     private String errorMessage;
-
 }
