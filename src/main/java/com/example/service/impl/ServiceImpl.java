@@ -182,43 +182,42 @@ public class ServiceImpl implements Service {
     }
 
     private BookDTO mapBookTOBookDTO(Book book) {
-        BookDTO bookDTO = new BookDTO();
-        bookDTO.setName(book.getName());
-        bookDTO.setIsbn(book.getIsbn());
-        bookDTO.setId(book.getId());
-        bookDTO.setPrice(book.getPrice());
-        return bookDTO;
+        return BookDTO.builder()
+                .id(book.getId())
+                .name(book.getName())
+                .isbn(book.getIsbn())
+                .price(book.getPrice())
+                .build();
     }
 
     private Author mapAuthorDTOToAuthor(AuthorDTO authorDTO) {
-        Author author = new Author();
-        author.setName(authorDTO.getName());
-        author.setEmailId(authorDTO.getEmail());
-        return author;
+        return Author.builder()
+                .name(authorDTO.getName())
+                .emailId(authorDTO.getEmail())
+                .build();
     }
 
     private Book mapBookDTOToBook(BookDTO bookDTO) {
-        Book book = new Book();
-        book.setName(bookDTO.getName());
-        book.setIsbn(bookDTO.getIsbn());
-        book.setPrice(bookDTO.getIsbn());
-        return book;
+        return Book.builder()
+                .name(bookDTO.getName())
+                .isbn(bookDTO.getIsbn())
+                .price(bookDTO.getPrice())
+                .build();
     }
 
     private AuthorDTO mapAuthorToAuthorDTO(Author author) {
-        AuthorDTO authorDTO = new AuthorDTO();
-        authorDTO.setId(author.getId());
-        authorDTO.setName(author.getName());
-        authorDTO.setEmail(author.getEmailId());
-        return authorDTO;
+        return AuthorDTO.builder()
+                .id(author.getId())
+                .name(author.getName())
+                .email(author.getEmailId())
+                .build();
     }
 
     private BookAuthorDTO mapBookAuthorToDTO(Book_Author bookAuthor){
-        BookAuthorDTO bookAuthorDTO = new BookAuthorDTO();
-        bookAuthorDTO.setAuthor(bookAuthor.getAuthor());
-        bookAuthorDTO.setBook(bookAuthor.getBook());
-        bookAuthorDTO.setId(bookAuthor.getId());
-        return bookAuthorDTO;
+        return BookAuthorDTO.builder()
+                .author(bookAuthor.getAuthor())
+                .book(bookAuthor.getBook())
+                .build();
     }
 
 }

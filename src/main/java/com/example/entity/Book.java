@@ -6,8 +6,9 @@ import lombok.*;
 
 @Getter
 @Setter
-@NoArgsConstructor
+@Builder
 @AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @EqualsAndHashCode(callSuper = false)
 @Serdeable

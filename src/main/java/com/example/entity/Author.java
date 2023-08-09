@@ -6,9 +6,10 @@ import lombok.*;
 
 @Getter
 @Setter
-@NoArgsConstructor
+@Builder
 @AllArgsConstructor
 @Entity
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @Serdeable
 @Table(name = "author_new",indexes = {

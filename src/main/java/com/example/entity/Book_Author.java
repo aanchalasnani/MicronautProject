@@ -3,14 +3,16 @@ package com.example.entity;
 import io.micronaut.serde.annotation.Serdeable;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Serdeable
+@Builder
 @Table(name = "book_author", indexes = {
         @Index(name = "book_id_index", columnList = "book_id"),
         @Index(name = "author_id_index", columnList = "author_id")
