@@ -62,8 +62,7 @@ public class ServiceImpl implements Service {
     }
 
     private AddBookResponse addABook(BookDTO bookDTO) {
-        Book book = mapBookDTOToBook(bookDTO);
-        Book savedBook = bookRepository.save(book);
+        Book savedBook = saveBook(bookDTO);
         return AddBookResponse.builder()
                 .bookId(savedBook.getId())
                 .status("Success")
@@ -72,13 +71,11 @@ public class ServiceImpl implements Service {
 
     @Transactional
     public AddBookResponse addBookByAuthorIds(BookDTO bookDTO, List<Integer> authorIds) throws NotFoundException{
-        Book book = mapBookDTOToBook(bookDTO);
-        Book savedBook = bookRepository.save(book);
+        Book savedBook = saveBook(bookDTO);
 
         for(Integer authorId : authorIds) {
-            validateAuthor(authorId);
-            Optional<Author> existingAuthor = authorRepository.findById(authorId);
-            bookAuthorRepository.save(new Book_Author(savedBook, existingAuthor.get()));
+            Author existingAuthor = fetchAuthorById(authorId);
+            bookAuthorRepository.save(new Book_Author(savedBook, existingAuthor));
         }
         return AddBookResponse.builder()
                 .status("Success")
@@ -86,12 +83,18 @@ public class ServiceImpl implements Service {
                 .build();
     }
 
-    private void validateAuthor(int authorId) throws NotFoundException{
+    private Author fetchAuthorById(int authorId) throws NotFoundException {
         Optional<Author> author = authorRepository.findById(authorId);
         if(author.isEmpty())
         {
             throw new NotFoundException("Not found", "Author with authorId : "+ authorId +" does not exist");
         }
+        return author.get();
+    }
+
+    private Book saveBook(BookDTO bookDTO) {
+        Book book = mapBookDTOToBook(bookDTO);
+        return bookRepository.save(book);
     }
 
     @Override
@@ -125,25 +128,6 @@ public class ServiceImpl implements Service {
                 .authorId(savedAuthor.getId())
                 .status("Success")
                 .build();
-    }
-
-    private AddAuthorResponse addAuthorByBookIds(AuthorDTO authorDTO, List<Integer> bookIds) throws NotFoundException {
-        Author author = mapAuthorDTOToAuthor(authorDTO);
-        Author savedAuthor = authorRepository.save(author);
-
-        for(Integer bookId : bookIds) {
-            validateBook(bookId);
-            Optional<Book> existingBook = bookRepository.findById(bookId);
-            bookAuthorRepository.save(new Book_Author(existingBook.get(), savedAuthor));
-        }
-        return AddAuthorResponse.builder()
-                .status("Success")
-                .authorId(savedAuthor.getId())
-                .build();
-    }
-
-    private void validateBook(int bookId) throws NotFoundException {
-        if(bookRepository.findById(bookId).isEmpty()) throw new NotFoundException("Not found", "Book with BookId : "+ bookId+" does not exist");
     }
 
     @Override
