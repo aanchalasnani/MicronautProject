@@ -16,6 +16,9 @@ import com.example.repository.AuthorRepository;
 import com.example.repository.BookAuthorRepository;
 import com.example.repository.BookRepository;
 import com.example.service.Service;
+import com.example.service.clients.RedisCacheClient;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.transaction.Transactional;
@@ -30,22 +33,38 @@ public class ServiceImpl implements Service {
     private final AuthorRepository authorRepository;
     private final BookRepository bookRepository;
     private final BookAuthorRepository bookAuthorRepository;
+    private final RedisCacheClient redisCacheClient;
 
     @Inject
-    public ServiceImpl(AuthorRepository authorRepository, BookRepository bookRepository, BookAuthorRepository bookAuthorRepository) {
+    public ServiceImpl(AuthorRepository authorRepository, BookRepository bookRepository, BookAuthorRepository bookAuthorRepository, RedisCacheClient redisCacheClient) {
         this.authorRepository = authorRepository;
         this.bookRepository = bookRepository;
         this.bookAuthorRepository = bookAuthorRepository;
+        this.redisCacheClient = redisCacheClient;
     }
 
 
     @Override
     public List<AuthorDTO> getAllAuthors() {
+//        List<AuthorDTO> authorsDTO = new ArrayList<>();
+//        List<Author> authors = authorRepository.findAll();
+//        for(Author author : authors) {
+//            AuthorDTO authorDTO = mapAuthorToAuthorDTO(author);
+//            authorsDTO.add(authorDTO);
+//        }
+//        return authorsDTO;
         List<AuthorDTO> authorsDTO = new ArrayList<>();
-        List<Author> authors = authorRepository.findAll();
-        for(Author author : authors) {
-            AuthorDTO authorDTO = mapAuthorToAuthorDTO(author);
-            authorsDTO.add(authorDTO);
+        if (redisCacheClient.exists("allAuthors")) {
+            String cachedData = redisCacheClient.get("allAuthors");
+            authorsDTO = convertJsonToAuthorDTOList(cachedData);
+        } else {
+            List<Author> authors = authorRepository.findAll();
+            for (Author author : authors) {
+                AuthorDTO authorDTO = mapAuthorToAuthorDTO(author);
+                authorsDTO.add(authorDTO);
+            }
+            // Cache the data
+            redisCacheClient.set("allAuthors", convertAuthorDTOListToJson(authorsDTO));
         }
         return authorsDTO;
     }
@@ -179,6 +198,28 @@ public class ServiceImpl implements Service {
                 bookList.add(bookDTO);
         }
         return bookList;
+    }
+
+    private List<AuthorDTO> convertJsonToAuthorDTOList(String json) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(json, new TypeReference<List<AuthorDTO>>() {});
+        } catch (Exception e) {
+            // Handle exceptions appropriately
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
+    private String convertAuthorDTOListToJson(List<AuthorDTO> authorsDTO) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.writeValueAsString(authorsDTO);
+        } catch (Exception e) {
+            // Handle exceptions appropriately
+            e.printStackTrace();
+            return "";
+        }
     }
 
     private BookDTO mapBookTOBookDTO(Book book) {
