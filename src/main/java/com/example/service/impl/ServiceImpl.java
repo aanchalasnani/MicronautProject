@@ -46,13 +46,6 @@ public class ServiceImpl implements Service {
 
     @Override
     public List<AuthorDTO> getAllAuthors() {
-//        List<AuthorDTO> authorsDTO = new ArrayList<>();
-//        List<Author> authors = authorRepository.findAll();
-//        for(Author author : authors) {
-//            AuthorDTO authorDTO = mapAuthorToAuthorDTO(author);
-//            authorsDTO.add(authorDTO);
-//        }
-//        return authorsDTO;
         List<AuthorDTO> authorsDTO = new ArrayList<>();
         if (redisCacheClient.exists("allAuthors")) {
             String cachedData = redisCacheClient.get("allAuthors");
@@ -63,7 +56,6 @@ public class ServiceImpl implements Service {
                 AuthorDTO authorDTO = mapAuthorToAuthorDTO(author);
                 authorsDTO.add(authorDTO);
             }
-            // Cache the data
             redisCacheClient.set("allAuthors", convertAuthorDTOListToJson(authorsDTO));
         }
         return authorsDTO;
@@ -72,10 +64,16 @@ public class ServiceImpl implements Service {
     @Override
     public List<BookDTO> getAllBooks() {
         List<BookDTO> booksDTO = new ArrayList<>();
-        List<Book> books = bookRepository.findAll();
-        for(Book book : books) {
-            BookDTO bookDTO = mapBookTOBookDTO(book);
-            booksDTO.add(bookDTO);
+        if (redisCacheClient.exists("allBooks")) {
+            String cachedData = redisCacheClient.get("allBooks");
+            booksDTO = convertJsonToBookDTOList(cachedData);
+        } else {
+            List<Book> books = bookRepository.findAll();
+            for(Book book : books) {
+                BookDTO bookDTO = mapBookToBookDTO(book);
+                booksDTO.add(bookDTO);
+            }
+            redisCacheClient.set("allBooks", convertBookDTOListToJson(booksDTO));
         }
         return booksDTO;
     }
@@ -93,7 +91,7 @@ public class ServiceImpl implements Service {
         Book savedBook = saveBook(bookDTO);
 
         for(Integer authorId : authorIds) {
-            Author existingAuthor = fetchAuthorById(authorId);
+            Author existingAuthor = searchAuthorById(authorId);
             bookAuthorRepository.save(new Book_Author(savedBook, existingAuthor));
         }
         return AddBookResponse.builder()
@@ -102,7 +100,7 @@ public class ServiceImpl implements Service {
                 .build();
     }
 
-    private Author fetchAuthorById(int authorId) throws NotFoundException {
+    private Author searchAuthorById(int authorId) throws NotFoundException {
         Optional<Author> author = authorRepository.findById(authorId);
         if(author.isEmpty())
         {
@@ -175,8 +173,20 @@ public class ServiceImpl implements Service {
 
     @Override
     public Author getAuthorById(int authorId) throws NotFoundException {
-        validateAuthorById(authorId);
-        return authorRepository.findById(authorId).get();
+        String authorCacheKey = "author:" + authorId;
+
+        if (redisCacheClient.exists(authorCacheKey)) {
+            String cachedData = redisCacheClient.get(authorCacheKey);
+            return convertJsonToAuthor(cachedData);
+        } else {
+            validateAuthorById(authorId);
+            Author author = authorRepository.findById(authorId).get();
+            String authorJson = convertAuthorToJson(author);
+
+            redisCacheClient.set(authorCacheKey, authorJson);
+
+            return author;
+        }
     }
 
     private void validateAuthorById(int authorId) throws NotFoundException {
@@ -187,17 +197,67 @@ public class ServiceImpl implements Service {
     }
 
     @Override
-    public List<BookDTO> getBookByAuthorId(int authorId)  throws NotFoundException {
+    public List<BookDTO> getBookByAuthorId(int authorId) throws NotFoundException {
+        String bookListCacheKey = "authorBooks:" + authorId;
 
-        List<BookDTO> bookList = new ArrayList<>();
-        validateAuthorById(authorId);
-        List<Integer> bookIds = bookAuthorRepository.findBookAuthorMapping(authorId);
-        for(Integer bookId : bookIds) {
-                Book book = bookRepository.findById(bookId).orElse(null);
-                BookDTO bookDTO = mapBookTOBookDTO(book);
+        if (redisCacheClient.exists(bookListCacheKey)) {
+            String cachedData = redisCacheClient.get(bookListCacheKey);
+            return convertJsonToBookDTOList(cachedData);
+        } else {
+            validateAuthorById(authorId);
+            List<Integer> bookIds = bookAuthorRepository.findBookAuthorMapping(authorId);
+            List<BookDTO> bookList = new ArrayList<>();
+
+            for (Integer bookId : bookIds) {
+                Book book = fetchBookById(bookId);
+                BookDTO bookDTO = mapBookToBookDTO(book);
                 bookList.add(bookDTO);
+            }
+
+            String bookListJson = convertBookDTOListToJson(bookList);
+
+            redisCacheClient.set(bookListCacheKey, bookListJson);
+
+            return bookList;
         }
-        return bookList;
+    }
+
+    private Book fetchBookById(int bookId) {
+        String bookCacheKey = "book:" + bookId;
+
+        if (redisCacheClient.exists(bookCacheKey)) {
+            String cachedData = redisCacheClient.get(bookCacheKey);
+            return convertJsonToBook(cachedData);
+        } else {
+            Book book = bookRepository.findById(bookId).orElse(null);
+
+            if (book != null) {
+                String bookJson = convertBookToJson(book);
+                redisCacheClient.set(bookCacheKey, bookJson);
+            }
+
+            return book;
+        }
+    }
+
+    private Book convertJsonToBook(String json) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(json, Book.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private String convertBookToJson(Book book) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.writeValueAsString(book);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
+        }
     }
 
     private List<AuthorDTO> convertJsonToAuthorDTOList(String json) {
@@ -205,7 +265,6 @@ public class ServiceImpl implements Service {
             ObjectMapper objectMapper = new ObjectMapper();
             return objectMapper.readValue(json, new TypeReference<List<AuthorDTO>>() {});
         } catch (Exception e) {
-            // Handle exceptions appropriately
             e.printStackTrace();
             return new ArrayList<>();
         }
@@ -216,13 +275,52 @@ public class ServiceImpl implements Service {
             ObjectMapper objectMapper = new ObjectMapper();
             return objectMapper.writeValueAsString(authorsDTO);
         } catch (Exception e) {
-            // Handle exceptions appropriately
             e.printStackTrace();
             return "";
         }
     }
 
-    private BookDTO mapBookTOBookDTO(Book book) {
+    private List<BookDTO> convertJsonToBookDTOList(String json) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(json, new TypeReference<List<BookDTO>>() {});
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
+    private String convertBookDTOListToJson(List<BookDTO> booksDTO) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.writeValueAsString(booksDTO);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
+    private Author convertJsonToAuthor(String json) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(json, Author.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private String convertAuthorToJson(Author author) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.writeValueAsString(author);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
+    private BookDTO mapBookToBookDTO(Book book) {
         return BookDTO.builder()
                 .id(book.getId())
                 .name(book.getName())
