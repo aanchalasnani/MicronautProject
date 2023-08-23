@@ -25,32 +25,8 @@ public class RedisCacheClient {
         return redisCommands.get(key);
     }
 
-    public void setWithExpiration(String key, String value, long seconds) {
-        redisCommands.setex(key, seconds, value);
-    }
-
     public boolean exists(String key) {
         return redisCommands.exists(key) > 0;
-    }
-
-    public void delete(String key) {
-        redisCommands.del(key);
-    }
-
-    public long increment(String key) {
-        return redisCommands.incr(key);
-    }
-
-    public long decrement(String key) {
-        return redisCommands.decr(key);
-    }
-
-    public void setHashValue(String hashKey, String field, String value) {
-        redisCommands.hset(hashKey, field, value);
-    }
-
-    public String getHashValue(String hashKey, String field) {
-        return redisCommands.hget(hashKey, field);
     }
 
     @PreDestroy
