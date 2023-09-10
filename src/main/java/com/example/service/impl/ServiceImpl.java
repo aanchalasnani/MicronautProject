@@ -138,7 +138,7 @@ public class ServiceImpl implements Service {
         }
     }
 
-    private AddAuthorResponse addAnAuthor(AuthorDTO authorDTO) {
+    public AddAuthorResponse addAnAuthor(AuthorDTO authorDTO) {
         Author author = mapAuthorDTOToAuthor(authorDTO);
         Author savedAuthor = authorRepository.save(author);
         return AddAuthorResponse.builder()
